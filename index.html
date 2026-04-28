@@ -442,19 +442,18 @@
   function addEmail() { emails.push({ value: "" }); renderEmails(); }
 
   // --- Phones ---
-  const PHONE_TYPES = ["CELL","WORK","HOME","VOICE","FAX","PAGER"];
-  const COUNTRIES = ["Afghanistan","Albania","Algeria","Andorra","Angola","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahrain","Bangladesh","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada","Chad","Chile","China","Colombia","Congo","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Dominican Republic","DR Congo","Ecuador","Egypt","El Salvador","Estonia","Ethiopia","Finland","France","Gabon","Georgia","Germany","Ghana","Greece","Guatemala","Honduras","Hong Kong","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Libya","Liechtenstein","Lithuania","Luxembourg","Macau","Madagascar","Malaysia","Maldives","Mali","Malta","Mexico","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Korea","North Macedonia","Norway","Oman","Pakistan","Palestine","Panama","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saudi Arabia","Senegal","Serbia","Singapore","Slovakia","Slovenia","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka","Sudan","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Tunisia","Turkey","Turkmenistan","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"];
 
-  let phones = [{ type: "CELL", country: "", number: "" }];
+  let phones = [{ type: "CELL", number: "" }];
 
   function renderPhones() {
     const container = document.getElementById('phones-container');
     container.innerHTML = '';
     phones.forEach((p, i) => {
       const row = document.createElement('div');
-      row.style.cssText = 'display:grid;grid-template-columns:80px 130px 1fr 28px;gap:10px;align-items:end;margin-bottom:12px;';
+      row.style.cssText = 'display:grid;grid-template-columns:100px 1fr 28px;gap:12px;align-items:end;margin-bottom:12px;';
 
-      // Type
+      // Type dropdown
+      const PHONE_TYPES = ["CELL","WORK","HOME","VOICE","FAX","PAGER"];
       const typeWrap = document.createElement('div');
       typeWrap.innerHTML = '<label class="f-label">Type</label>';
       const sel = document.createElement('select');
@@ -467,22 +466,6 @@
       sel.onchange = e => { phones[i].type = e.target.value; };
       typeWrap.appendChild(sel);
 
-      // Country
-      const countryWrap = document.createElement('div');
-      countryWrap.innerHTML = '<label class="f-label">Country</label>';
-      const csel = document.createElement('select');
-      const blankOpt = document.createElement('option');
-      blankOpt.value = ''; blankOpt.textContent = '— None —';
-      csel.appendChild(blankOpt);
-      COUNTRIES.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c; opt.textContent = c;
-        if (c === p.country) opt.selected = true;
-        csel.appendChild(opt);
-      });
-      csel.onchange = e => { phones[i].country = e.target.value; };
-      countryWrap.appendChild(csel);
-
       // Number
       const numWrap = document.createElement('div');
       numWrap.innerHTML = '<label class="f-label">Number</label>';
@@ -492,7 +475,6 @@
       numWrap.appendChild(inp);
 
       row.appendChild(typeWrap);
-      row.appendChild(countryWrap);
       row.appendChild(numWrap);
 
       if (phones.length > 1) {
@@ -508,7 +490,7 @@
     document.getElementById('phones-label').textContent = `Phone Numbers (${phones.length})`;
   }
 
-  function addPhone() { phones.push({ type: "CELL", country: "", number: "" }); renderPhones(); }
+  function addPhone() { phones.push({ type: "CELL", number: "" }); renderPhones(); }
 
   // --- Addresses ---
   let addresses = [{ value: "" }];
@@ -534,7 +516,7 @@
     if (get('website')) vc += `URL:${get('website')}\n`;
     addresses.forEach(a => { if (a.value) vc += `ADR:;;${a.value};;;;\n`; });
     if (get('note'))    vc += `NOTE:${get('note')}\n`;
-    phones.forEach(p => { if (p.number) { const label = p.country ? `${p.type};${p.country}` : p.type; vc += `TEL;TYPE=${label}:${p.number}\n`; } });
+    phones.forEach(p => { if (p.number) vc += `TEL;TYPE=${p.type}:${p.number}\n`; });
     vc += 'END:VCARD';
     return vc;
   }
