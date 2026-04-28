@@ -583,11 +583,28 @@
   }
 
   function downloadPNG() {
-    const dataURL = buildQRDataURL(currentVCard, 400);
+    const qr = qrcode(0, 'M');
+    qr.addData(currentVCard);
+    qr.make();
+    const mod = qr.getModuleCount();
+    const size = 400;
+    const pad = 24;
+    const cell = Math.floor((size - pad * 2) / mod);
+    const total = cell * mod + pad * 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = total; canvas.height = total;
+    const ctx = canvas.getContext('2d');
+    // transparent background — no fillRect
+    ctx.fillStyle = '#000000';
+    for (let r = 0; r < mod; r++) {
+      for (let c = 0; c < mod; c++) {
+        if (qr.isDark(r, c)) ctx.fillRect(pad + c*cell, pad + r*cell, cell, cell);
+      }
+    }
     const a = document.createElement('a');
     const fn = document.getElementById('firstName').value || 'contact';
     const ln = document.getElementById('lastName').value || '';
-    a.href = dataURL;
+    a.href = canvas.toDataURL('image/png');
     a.download = `${fn}_${ln}_qr.png`;
     a.click();
   }
