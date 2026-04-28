@@ -320,15 +320,25 @@
     <div class="divider" style="margin-top:20px"></div>
 
     <div class="s-label">Contact</div>
-    <div class="field"><label class="f-label">Email</label><input type="text" id="email" /></div>
     <div class="field"><label class="f-label">Website</label><input type="text" id="website" /></div>
-    <div class="field" style="margin-bottom:0"><label class="f-label">Address</label><input type="text" id="address" /></div>
+
+    <div class="divider" style="margin-top:20px"></div>
+
+    <div class="s-label" id="emails-label">Emails (1)</div>
+    <div id="emails-container"></div>
+    <button class="btn-add" onclick="addEmail()">+ Add Email</button>
 
     <div class="divider" style="margin-top:20px"></div>
 
     <div class="s-label" id="phones-label">Phone Numbers (1)</div>
     <div id="phones-container"></div>
     <button class="btn-add" onclick="addPhone()">+ Add Number</button>
+
+    <div class="divider" style="margin-top:20px"></div>
+
+    <div class="s-label" id="addresses-label">Addresses (1)</div>
+    <div id="addresses-container"></div>
+    <button class="btn-add" onclick="addAddress()">+ Add Address</button>
 
     <div class="divider" style="margin-top:20px"></div>
 
@@ -373,63 +383,82 @@
     iconEl.appendChild(d);
   });
 
-  // --- Phone management ---
-  const PHONE_TYPES = ["CELL","WORK","HOME","VOICE","FAX","PAGER"];
-  let phones = [{ type: "CELL", number: "" }];
 
-  function renderPhones() {
-    const container = document.getElementById('phones-container');
+
+  // --- Generic dynamic list renderer ---
+  function makeList({ data, containerId, labelId, labelText, fieldLabel, valueProp, types, typeLabel, removeFn }) {
+    const container = document.getElementById(containerId);
     container.innerHTML = '';
-    phones.forEach((p, i) => {
+    data.forEach((item, i) => {
       const row = document.createElement('div');
-      row.className = 'grid-3';
-
-      const typeWrap = document.createElement('div');
-      typeWrap.innerHTML = `<label class="f-label">Type</label>`;
-      const sel = document.createElement('select');
-      PHONE_TYPES.forEach(t => {
-        const opt = document.createElement('option');
-        opt.value = t; opt.textContent = t;
-        if (t === p.type) opt.selected = true;
-        sel.appendChild(opt);
-      });
-      sel.onchange = e => { phones[i].type = e.target.value; };
-      typeWrap.appendChild(sel);
-
-      const numWrap = document.createElement('div');
-      numWrap.innerHTML = `<label class="f-label">Number</label>`;
-      const inp = document.createElement('input');
-      inp.type = 'text';
-      inp.value = p.number;
-      inp.oninput = e => { phones[i].number = e.target.value; };
-      numWrap.appendChild(inp);
-
-      row.appendChild(typeWrap);
-      row.appendChild(numWrap);
-
-      if (phones.length > 1) {
+      if (types) {
+        row.className = 'grid-3';
+        const typeWrap = document.createElement('div');
+        typeWrap.innerHTML = `<label class="f-label">${typeLabel}</label>`;
+        const sel = document.createElement('select');
+        types.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t; opt.textContent = t;
+          if (t === item.type) opt.selected = true;
+          sel.appendChild(opt);
+        });
+        sel.onchange = e => { data[i].type = e.target.value; };
+        typeWrap.appendChild(sel);
+        const valWrap = document.createElement('div');
+        valWrap.innerHTML = `<label class="f-label">${fieldLabel}</label>`;
+        const inp = document.createElement('input');
+        inp.type = 'text'; inp.value = item[valueProp];
+        inp.oninput = e => { data[i][valueProp] = e.target.value; };
+        valWrap.appendChild(inp);
+        row.appendChild(typeWrap);
+        row.appendChild(valWrap);
+      } else {
+        row.style.cssText = 'display:grid;grid-template-columns:1fr 28px;gap:12px;align-items:end;margin-bottom:12px;';
+        const valWrap = document.createElement('div');
+        valWrap.innerHTML = `<label class="f-label">${fieldLabel}</label>`;
+        const inp = document.createElement('input');
+        inp.type = 'text'; inp.value = item[valueProp];
+        inp.oninput = e => { data[i][valueProp] = e.target.value; };
+        valWrap.appendChild(inp);
+        row.appendChild(valWrap);
+      }
+      if (data.length > 1) {
         const rmBtn = document.createElement('button');
         rmBtn.className = 'btn-remove';
         rmBtn.textContent = '×';
-        rmBtn.onclick = () => { phones.splice(i, 1); renderPhones(); updatePhonesLabel(); };
+        rmBtn.onclick = () => { data.splice(i, 1); removeFn(); };
         row.appendChild(rmBtn);
       }
-
       container.appendChild(row);
     });
+    document.getElementById(labelId).textContent = `${labelText} (${data.length})`;
   }
 
-  function addPhone() {
-    phones.push({ type: "CELL", number: "" });
-    renderPhones();
-    updatePhonesLabel();
+  // --- Emails ---
+  let emails = [{ value: "" }];
+  function renderEmails() {
+    makeList({ data: emails, containerId: 'emails-container', labelId: 'emails-label', labelText: 'Emails', fieldLabel: 'Email Address', valueProp: 'value', removeFn: renderEmails });
   }
+  function addEmail() { emails.push({ value: "" }); renderEmails(); }
 
-  function updatePhonesLabel() {
-    document.getElementById('phones-label').textContent = `Phone Numbers (${phones.length})`;
+  // --- Phones ---
+  const PHONE_TYPES = ["CELL","WORK","HOME","VOICE","FAX","PAGER"];
+  let phones = [{ type: "CELL", number: "" }];
+  function renderPhones() {
+    makeList({ data: phones, containerId: 'phones-container', labelId: 'phones-label', labelText: 'Phone Numbers', fieldLabel: 'Number', valueProp: 'number', types: PHONE_TYPES, typeLabel: 'Type', removeFn: renderPhones });
   }
+  function addPhone() { phones.push({ type: "CELL", number: "" }); renderPhones(); }
 
+  // --- Addresses ---
+  let addresses = [{ value: "" }];
+  function renderAddresses() {
+    makeList({ data: addresses, containerId: 'addresses-container', labelId: 'addresses-label', labelText: 'Addresses', fieldLabel: 'Address', valueProp: 'value', removeFn: renderAddresses });
+  }
+  function addAddress() { addresses.push({ value: "" }); renderAddresses(); }
+
+  renderEmails();
   renderPhones();
+  renderAddresses();
 
   // --- vCard builder ---
   function buildVCard() {
@@ -440,9 +469,9 @@
     if (fn || ln) vc += `FN:${fn} ${ln}\n`;
     if (get('org'))     vc += `ORG:${get('org')}\n`;
     if (get('title'))   vc += `TITLE:${get('title')}\n`;
-    if (get('email'))   vc += `EMAIL:${get('email')}\n`;
+    emails.forEach(e => { if (e.value) vc += `EMAIL:${e.value}\n`; });
     if (get('website')) vc += `URL:${get('website')}\n`;
-    if (get('address')) vc += `ADR:;;${get('address')};;;;\n`;
+    addresses.forEach(a => { if (a.value) vc += `ADR:;;${a.value};;;;\n`; });
     if (get('note'))    vc += `NOTE:${get('note')}\n`;
     phones.forEach(p => { if (p.number) vc += `TEL;TYPE=${p.type}:${p.number}\n`; });
     vc += 'END:VCARD';
